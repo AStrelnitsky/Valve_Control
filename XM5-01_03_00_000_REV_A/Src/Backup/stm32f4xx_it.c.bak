@@ -4,7 +4,7 @@
   * @brief   Interrupt Service Routines.
   ******************************************************************************
   *
-  * COPYRIGHT(c) 2018 STMicroelectronics
+  * COPYRIGHT(c) 2019 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -37,7 +37,17 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN 0 */
-
+#include "rs485.h"
+#include "servo.h"
+#include "usart.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
+extern struct RS485 rs485;
+extern struct SControl scontrol;
+extern xSemaphoreHandle xBinarySemaphore;
+static portBASE_TYPE xHigherPriorityTaskWoken;
+void HAL_UART_RxCallback(UART_HandleTypeDef*);
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -45,6 +55,8 @@ extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
 extern DAC_HandleTypeDef hdac;
 extern I2C_HandleTypeDef hi2c1;
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
 extern DMA_HandleTypeDef hdma_usart3_rx;
 extern DMA_HandleTypeDef hdma_usart3_tx;
 extern UART_HandleTypeDef huart2;
@@ -181,11 +193,17 @@ void SysTick_Handler(void)
 void DMA1_Stream1_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Stream1_IRQn 0 */
-
+	//static portBASE_TYPE xHigherPriorityTaskWoken;
+	xHigherPriorityTaskWoken = pdFALSE;
   /* USER CODE END DMA1_Stream1_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_usart3_rx);
   /* USER CODE BEGIN DMA1_Stream1_IRQn 1 */
-
+//	rs485.state = WAIT_PARSE;
+//	xSemaphoreGiveFromISR( xBinarySemaphore, &xHigherPriorityTaskWoken);
+//	if (xHigherPriorityTaskWoken == pdTRUE)
+//	{
+		//taskYIELD ();
+//	}
   /* USER CODE END DMA1_Stream1_IRQn 1 */
 }
 
@@ -199,7 +217,8 @@ void DMA1_Stream3_IRQHandler(void)
   /* USER CODE END DMA1_Stream3_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_usart3_tx);
   /* USER CODE BEGIN DMA1_Stream3_IRQn 1 */
-
+	rs485.state = IDLE;
+	
   /* USER CODE END DMA1_Stream3_IRQn 1 */
 }
 
@@ -230,6 +249,34 @@ void TIM1_UP_TIM10_IRQHandler(void)
   /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 1 */
 
   /* USER CODE END TIM1_UP_TIM10_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM2 global interrupt.
+*/
+void TIM2_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM2_IRQn 0 */
+
+  /* USER CODE END TIM2_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim2);
+  /* USER CODE BEGIN TIM2_IRQn 1 */
+	
+  /* USER CODE END TIM2_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM3 global interrupt.
+*/
+void TIM3_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM3_IRQn 0 */
+
+  /* USER CODE END TIM3_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim3);
+  /* USER CODE BEGIN TIM3_IRQn 1 */
+
+  /* USER CODE END TIM3_IRQn 1 */
 }
 
 /**
@@ -284,7 +331,7 @@ void USART3_IRQHandler(void)
   /* USER CODE END USART3_IRQn 0 */
   HAL_UART_IRQHandler(&huart3);
   /* USER CODE BEGIN USART3_IRQn 1 */
-
+	HAL_UART_RxCallback(&huart3);
   /* USER CODE END USART3_IRQn 1 */
 }
 
@@ -298,11 +345,196 @@ void TIM6_DAC_IRQHandler(void)
   /* USER CODE END TIM6_DAC_IRQn 0 */
   HAL_DAC_IRQHandler(&hdac);
   /* USER CODE BEGIN TIM6_DAC_IRQn 1 */
-
   /* USER CODE END TIM6_DAC_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */
+void HAL_UART_RxCallback(UART_HandleTypeDef *huart)
+{
+	
+	static uint8_t byte_counter;
+	uint8_t buff = huart->Instance->DR;
+	
+	switch (byte_counter)
+	{
+		case 0: 
+			if (buff == PUMP) ++byte_counter;
+			else  
+			{
+				byte_counter = 0;
+				huart->RxXferCount += 1;
+			}
+		break;
+		case 1: 
+			if (buff == HEADER) ++byte_counter;
+		  else
+			{
+				byte_counter = 0;
+				huart->RxXferCount += 2;
+			}
+		break;
+		case 2: 
+			if (buff == (rs485.address))
+			{
+				++byte_counter;
+			}
+			else 
+			{
+				byte_counter = 0;
+				huart->RxXferCount += 3;				
+			}
+		break;
+		case 3:
+				byte_counter = 0;
+				rs485.state = WAIT_DMA_RECEIVE;
+				HAL_UART_Abort_IT(huart);
+				rs485.rx_buffer_length = buff;
+				HAL_UART_Receive_DMA(huart, rs485.rx_buffer, buff);
+		break;
+			
+		default: break;
+	}
+	
+	
+}
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	static uint8_t byte_counter;
+	if ((huart->Instance) == USART2)
+	{
+			HAL_TIM_Base_Stop_IT(&htim2);
+			scontrol.servo_rx_timer = RX_COMPLETE;
+		
+			if (scontrol.state == SERVO_WAIT_REG_WRITE_RECEIVE)
+				{
+					//scontrol.state = SERVO_READY_TO_ACTION;
+						scontrol.servo_rx_timer = RX_CLEAR;
+						scontrol.state = SERVO_WAIT_ACTION_TRANSMIT;
+						scontrol.sdir = STX;
+						SelectDaisyDirection(&scontrol);
+						constructControlMessage(&scontrol, ACTION);
+						HAL_UART_Transmit_IT(&huart2, (scontrol.tx_buffer), 10 + XL_ACTION_PARAMETR_SIZE);			
+						HAL_TIM_Base_Start_IT(&htim2);
+				
+				}
+			else if (scontrol.state == SERVO_WAIT_READ_RECEIVE)
+			{
+				scontrol.servos[scontrol.s_counter].mode = scontrol.rx_buffer[9];
+				scontrol.state = IDLE;
+			}
+			else
+				{
+					scontrol.state = IDLE;
+					
+				}
+	}
+	else if ((huart->Instance) == USART3)
+	{
+		rs485.state = WAIT_PARSE;
+		xSemaphoreGiveFromISR( xBinarySemaphore, &xHigherPriorityTaskWoken);
+		if (xHigherPriorityTaskWoken == pdTRUE)
+		{
+			//taskYIELD ();
+		}
+	}
+}
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if ((huart->Instance) == USART2)
+	{
+		if (scontrol.state == SERVO_WAIT_IT_TRANSMIT)
+		{
+			scontrol.state = SERVO_IDLE;
+			scontrol.sdir = SRX;
+			SelectDaisyDirection(&scontrol);
+			HAL_UART_Abort_IT(huart);
+			HAL_UART_Receive_IT(huart, (scontrol.rx_buffer), 14);
+			
+			htim2.Instance->ARR = SERVO_RX_TIMEOUT;
+			htim2.Instance->CNT = 0;
+			//htim2.Init.Period = SERVO_RX_TIMEOUT;
+			HAL_TIM_Base_Start_IT(&htim2);
+		}
+		else if ( scontrol.state == SERVO_WAIT_REG_WRITE_TRANSMIT)
+		{
+			scontrol.state = SERVO_WAIT_REG_WRITE_RECEIVE;
+			scontrol.sdir = SRX;
+			SelectDaisyDirection(&scontrol);
+			HAL_UART_Abort_IT(huart);
+			HAL_UART_Receive_IT(huart, (scontrol.rx_buffer), 11);
+			
+		}
+		else if ( scontrol.state == SERVO_WAIT_ACTION_TRANSMIT)
+		{
+			scontrol.state = SERVO_WAIT_ACTION_RECEIVE;
+			scontrol.sdir = SRX;
+			SelectDaisyDirection(&scontrol);
+			HAL_UART_Abort_IT(huart);
+			HAL_UART_Receive_IT(huart, (scontrol.rx_buffer), 11);
+			
+		}
+		else if (scontrol.state == SERVO_WAIT_IT_RECEIVE)
+		{
+			//scontrol.state = SERVO_NEW_MESSAGE_IS_RECEIVED;
+			scontrol.state = SERVO_IDLE;
+		}
+		else if (scontrol.state == SERVO_WAIT_READ_TRANSMIT)
+		{
+			
+			scontrol.state = SERVO_WAIT_READ_RECEIVE;
+			scontrol.sdir = SRX;
+			SelectDaisyDirection(&scontrol);
+			HAL_UART_Abort_IT(huart);
+			HAL_UART_Receive_IT(huart, (scontrol.rx_buffer), 15);
+			
+		}
+		else if (scontrol.state == SERVO_WAIT_WRITE_MODE_TRANSMIT)
+		{
+			
+			scontrol.state = SERVO_WAIT_WRITE_MODE_RECEIVE;
+			scontrol.sdir = SRX;
+			SelectDaisyDirection(&scontrol);
+			HAL_UART_Abort_IT(huart);
+			HAL_UART_Receive_IT(huart, (scontrol.rx_buffer), 11);	
+		}
+		else if (scontrol.state == SERVO_WAIT_FACTORY_RESET_TRANSMIT)
+		{
+			scontrol.state = SERVO_WAIT_FACTORY_RESET_RECEIVE;
+			scontrol.sdir = SRX;
+			SelectDaisyDirection(&scontrol);
+			HAL_UART_Abort_IT(huart);
+			HAL_UART_Receive_IT(huart, (scontrol.rx_buffer), 11);	
+			
+		}
+		else if (scontrol.state == SERVO_WAIT_WRITE_ID_TRANSMIT)
+		{
+			scontrol.state = SERVO_WAIT_WRITE_ID_RECEIVE;
+			scontrol.sdir = SRX;
+			SelectDaisyDirection(&scontrol);
+			HAL_UART_Abort_IT(huart);
+			HAL_UART_Receive_IT(huart, (scontrol.rx_buffer), 11);	
+		}
+		else
+		{
+			scontrol.sdir = SRX;
+			SelectDaisyDirection(&scontrol);
+			HAL_UART_Abort_IT(huart);
+			HAL_UART_Receive_IT(huart, (scontrol.rx_buffer), 14);
+			scontrol.state = SERVO_IDLE;
+		}
+			
+}
+		
+	else if ((huart->Instance) == USART3)
+	{
+		
+			rs485.dir = RX;
+			SelectDirection(&rs485);
+			
+	}
+
+}
+
 
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

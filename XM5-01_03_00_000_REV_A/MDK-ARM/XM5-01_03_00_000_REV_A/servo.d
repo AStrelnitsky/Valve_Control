@@ -39,3 +39,5 @@ xm5-01_03_00_000_rev_a\servo.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ha
 xm5-01_03_00_000_rev_a\servo.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 xm5-01_03_00_000_rev_a\servo.o: ../Inc/usart.h
 xm5-01_03_00_000_rev_a\servo.o: XM5-01_03_00_000_REV_A.h
+xm5-01_03_00_000_rev_a\servo.o: XL320.h
+xm5-01_03_00_000_rev_a\servo.o: ../Inc/tim.h

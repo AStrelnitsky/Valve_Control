@@ -41,3 +41,13 @@ xm5-01_03_00_000_rev_a\rs485.o: ../Inc/usart.h
 xm5-01_03_00_000_rev_a\rs485.o: XM5-01_03_00_000_REV_A.h
 xm5-01_03_00_000_rev_a\rs485.o: servo.h
 xm5-01_03_00_000_rev_a\rs485.o: XM5-01_03_00_000_REV_A.h
+xm5-01_03_00_000_rev_a\rs485.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+xm5-01_03_00_000_rev_a\rs485.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+xm5-01_03_00_000_rev_a\rs485.o: ../Inc/FreeRTOSConfig.h
+xm5-01_03_00_000_rev_a\rs485.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+xm5-01_03_00_000_rev_a\rs485.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+xm5-01_03_00_000_rev_a\rs485.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+xm5-01_03_00_000_rev_a\rs485.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+xm5-01_03_00_000_rev_a\rs485.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+xm5-01_03_00_000_rev_a\rs485.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+xm5-01_03_00_000_rev_a\rs485.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h

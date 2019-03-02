@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2018 STMicroelectronics International N.V. 
+  * Copyright (c) 2019 STMicroelectronics International N.V. 
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without 
@@ -63,7 +63,7 @@
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN Private defines */
-#define USER_LED GPIO_PIN_1
+#define USER_LED GPIO_PIN_11
 /* USER CODE END Private defines */
 
 void MX_GPIO_Init(void);

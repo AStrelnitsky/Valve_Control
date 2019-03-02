@@ -9,7 +9,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2018 STMicroelectronics International N.V. 
+  * Copyright (c) 2019 STMicroelectronics International N.V. 
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without 
@@ -51,8 +51,9 @@
 #include "task.h"
 #include "cmsis_os.h"
 
-/* USER CODE BEGIN Includes */ 
+/* USER CODE BEGIN Includes */     
 #include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_uart.h"
 #include "usart.h"
 #include "gpio.h"
 #include "rs485.h"
@@ -73,6 +74,8 @@ extern struct RS485 rs485;
 extern struct SControl scontrol;
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
 osThreadId rs485TaskHandle;
 osThreadId servoTaskHandle;
 /* USER CODE END Variables */
@@ -104,9 +107,9 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
-	
-  /* USER CODE END RTOS_SEMAPHORES */
 	vSemaphoreCreateBinary(xBinarySemaphore);
+  /* USER CODE END RTOS_SEMAPHORES */
+
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
@@ -118,9 +121,9 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-	osThreadDef(rs485Task, StartRS485Task, osPriorityNormal, 1, 128);
+	osThreadDef(rs485Task, StartRS485Task, osPriorityRealtime, 0, 128);
 	rs485TaskHandle = osThreadCreate(osThread(rs485Task), NULL);
-	osThreadDef(servoTask, ServoTask, osPriorityNormal, 2, 128);
+	osThreadDef(servoTask, ServoTask, osPriorityAboveNormal, 0, 256);
 	servoTaskHandle = osThreadCreate(osThread(servoTask), NULL);
   /* USER CODE END RTOS_THREADS */
 
@@ -132,23 +135,26 @@ void MX_FREERTOS_Init(void) {
 /* StartDefaultTask function */
 void StartDefaultTask(void const * argument)
 {
+
   /* USER CODE BEGIN StartDefaultTask */
 	static uint16_t cnt1 = 0;
   /* Infinite loop */
   for(;;)
   {
     osDelay(MAIN_THREAD_DELAY);
+		
 		if (rs485.state == IDLE) 
 		{
-			rs485.state = WAIT_IT_RECEIVE;
 			HAL_UART_Receive_IT(&huart3, rs485.rx_buffer, RS485_RX_SIZE);
+			rs485.state = WAIT_IT_RECEIVE;
+
 		}
 		++cnt1;
 		if ( !(cnt1 % USER_LED_HALFPERIOD))
 		{
 			HAL_GPIO_TogglePin(GPIOA, USER_LED);
 		}
-		
+	
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -159,18 +165,22 @@ void  StartRS485Task (void const * argument)
 	for(;;)
 	{
 		xSemaphoreTake(xBinarySemaphore, portMAX_DELAY);
-		ParseIncoming(&rs485);
+		if ( rs485.state == WAIT_PARSE)
+		{
+			ParseIncoming(&rs485, &scontrol);
+		}
 	}
 }
 void ServoTask(void const * argument)
 {
 	for(;;)
 	{
-		osDelay(SERVO_THREAD_DELAY);
-		if (scontrol.state == SERVO_IDLE) 
-		{
-			;
-		}
+			osDelay(SERVO_THREAD_DELAY);
+	
+	//	if (scontrol.state == SERVO_IDLE) 
+	//	{
+				startServoControl();
+//		}
 	}
 }
 /* USER CODE END Application */

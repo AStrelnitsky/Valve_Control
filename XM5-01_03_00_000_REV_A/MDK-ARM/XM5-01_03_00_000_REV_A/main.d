@@ -56,9 +56,9 @@ xm5-01_03_00_000_rev_a\main.o: ../Inc/adc.h
 xm5-01_03_00_000_rev_a\main.o: ../Inc/dac.h
 xm5-01_03_00_000_rev_a\main.o: ../Inc/dma.h
 xm5-01_03_00_000_rev_a\main.o: ../Inc/i2c.h
+xm5-01_03_00_000_rev_a\main.o: ../Inc/tim.h
 xm5-01_03_00_000_rev_a\main.o: ../Inc/usart.h
 xm5-01_03_00_000_rev_a\main.o: ../Inc/gpio.h
-xm5-01_03_00_000_rev_a\main.o: ..\MDK-ARM\XM5-01_03_00_000_REV_A.h
 xm5-01_03_00_000_rev_a\main.o: ..\MDK-ARM\rs485.h
 xm5-01_03_00_000_rev_a\main.o: ..\MDK-ARM\XM5-01_03_00_000_REV_A.h
 xm5-01_03_00_000_rev_a\main.o: ..\MDK-ARM\servo.h

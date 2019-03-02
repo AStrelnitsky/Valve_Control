@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2018 STMicroelectronics International N.V. 
+  * Copyright (c) 2019 STMicroelectronics International N.V. 
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without 
@@ -54,9 +54,9 @@
 #include "dac.h"
 #include "dma.h"
 #include "i2c.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
-#include "XM5-01_03_00_000_REV_A.h"
 
 /* USER CODE BEGIN Includes */
 #include "rs485.h"
@@ -77,7 +77,8 @@ static void MX_NVIC_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+extern struct SControl scontrol;
+extern struct RS485 rs485;
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -120,12 +121,15 @@ int main(void)
   MX_I2C1_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
-	RS485_Init();
-	ServoInit();
+  MX_TIM2_Init();
+  MX_TIM3_Init();
+
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-
+	servoInit(&scontrol);
+	RS485_Init();
+	
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
@@ -168,11 +172,12 @@ void SystemClock_Config(void)
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = 16;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 8;
   RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
@@ -195,10 +200,6 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Enables the Clock Security System 
-    */
-  HAL_RCC_EnableCSS();
-
     /**Configure the Systick interrupt time 
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
@@ -218,7 +219,7 @@ void SystemClock_Config(void)
 static void MX_NVIC_Init(void)
 {
   /* DMA1_Stream1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 15, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
   /* DMA1_Stream3_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 15, 0);
@@ -227,7 +228,7 @@ static void MX_NVIC_Init(void)
   HAL_NVIC_SetPriority(ADC_IRQn, 15, 0);
   HAL_NVIC_EnableIRQ(ADC_IRQn);
   /* I2C1_EV_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(I2C1_EV_IRQn, 15, 0);
+  HAL_NVIC_SetPriority(I2C1_EV_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(I2C1_EV_IRQn);
 }
 
@@ -252,7 +253,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-
+	else if(htim->Instance == TIM2)
+	{
+		HAL_TIM_Base_Stop_IT(&htim2);
+		HAL_TIM_Base_Stop(&htim2);
+		HAL_UART_Abort_IT(&huart2);
+		scontrol.servo_rx_timer = RX_OVERFLOW;
+		scontrol.state = IDLE;
+	}
+	else if(htim->Instance == TIM3)
+	{
+		HAL_TIM_Base_Stop_IT(&htim3);
+		HAL_TIM_Base_Stop(&htim3);
+		HAL_UART_Abort_IT(&huart3);
+		rs485.state = IDLE;
+	}
   /* USER CODE END Callback 1 */
 }
 

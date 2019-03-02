@@ -8,23 +8,157 @@ Copyright (C) 2014 ARM Ltd and ARM Germany GmbH. All rights reserved.
 License Information: Anatoly Main, GROV, LIC=----
  
 Tool Versions:
-Toolchain:       MDK-Lite  Version: <unknown>
-Toolchain Path:  C:\Keil_v5\ARM\ARMCC\bin\
+Toolchain:       MDK-Lite  Version: 5.12.0.0
+Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
 C Compiler:      Armcc.exe V5.05 (build 41)
 Assembler:       Armasm.exe V5.05 (build 41)
 Linker/Locator:  ArmLink.exe V5.05 (build 41)
 Library Manager: ArmAr.exe V5.05 (build 41)
 Hex Converter:   FromElf.exe V5.05 (build 41)
-CPU DLL:         SARMCM3.DLL
-Dialog DLL:      DCM.DLL
+CPU DLL:         SARMCM3.DLL V5.12.0.0
+Dialog DLL:      DCM.DLL V1.13.0.0
     Target DLL: STLink\ST-LINKIII-KEIL_SWO.dll
-Dialog DLL:      TCM.DLL
+Dialog DLL:      TCM.DLL V1.14.2.0
  
 <h2>Project:</h2>
-C:\Workbanch_NEW\XM5\SOFT\EMBEDDED\XM5-01_03_00_000_REV_A\MDK-ARM\XM5-01_03_00_000_REV_A.uvprojx
-Project File Date:  11/11/2018
+C:\Workbanch_NEW\XM5\SOFT\EMBEDDED\XM5-01_03_00_000_REV_A_test9\MDK-ARM\XM5-01_03_00_000_REV_A.uvprojx
+Project File Date:  01/20/2019
 
 <h2>Output:</h2>
+Build target 'XM5-01_03_00_000_REV_A'
+compiling rs485.c...
+rs485.c(60): warning:  #223-D: function "memset" declared implicitly
+        memset((rs->rx_buffer), 0, RS485_RX_SIZE);
+rs485.c(73): warning:  #174-D: expression has no effect
+        for (i; i <= delay; ++i)
+rs485.c(277): warning:  #940-D: missing return statement at end of non-void function "CalculateCRC"
+  }
+rs485.c(70): warning:  #177-D: function "simpleDelay" was declared but never referenced
+  static void simpleDelay(uint16_t delay)
+rs485.c: 4 warnings, 0 errors
+linking...
+Program Size: Code=22688 RO-data=1064 RW-data=140 ZI-data=17764  
+FromELF: creating hex file...
+"XM5-01_03_00_000_REV_A\XM5-01_03_00_000_REV_A.axf" - 0 Error(s), 4 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.4.2.0.pack
+                ARM::CMSIS:CORE:3.40.0
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+   * Component: CORE Version: 3.40.0
+
+<h2>Collection of Component include folders:</h2>
+  C:\Workbanch_NEW\XM5\SOFT\EMBEDDED\XM5-01_03_00_000_REV_A_test9\MDK-ARM\RTE
+  C:\Keil_v5\ARM\PACK\ARM\CMSIS\4.2.0\CMSIS\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:3.40.0
+      Source file:   CMSIS\UserCodeTemplates\ARM\ITM_Retarget.c
 </pre>
 </body>
 </html>
+ile:   CMSIS\UserCodeTemplates\ARM\ITM_Retarget.c
+9): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                                                SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(410): warning:  #223-D: function "constructControlMessage" declared implicitly
+                                                constructControlMessage(&scontrol, ACTION);
+../Src/stm32f4xx_it.c(418): warning:  #188-D: enumerated type mixed with another type
+                                scontrol.state = IDLE;
+../Src/stm32f4xx_it.c(422): warning:  #188-D: enumerated type mixed with another type
+                                        scontrol.state = IDLE;
+../Src/stm32f4xx_it.c(397): warning:  #177-D: variable "byte_counter" was declared but never referenced
+        static uint8_t byte_counter;
+../Src/stm32f4xx_it.c(440): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(452): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(461): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(476): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(486): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(494): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(503): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(510): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(522): warning:  #223-D: function "SelectDirection" declared implicitly
+                        SelectDirection(&rs485);
+../Src/stm32f4xx_it.c: 14 warnings, 0 errors
+compiling freertos.c...
+../Src/freertos.c(170): warning:  #223-D: function "ParseIncoming" declared implicitly
+                        ParseIncoming(&rs485, &scontrol);
+../Src/freertos.c: 1 warning, 0 errors
+compiling main.c...
+../Src/main.c(262): warning:  #188-D: enumerated type mixed with another type
+                scontrol.state = IDLE;
+../Src/main.c: 1 warning, 0 errors
+linking...
+Program Size: Code=22544 RO-data=1064 RW-data=140 ZI-data=17764  
+FromELF: creating hex file...
+"XM5-01_03_00_000_REV_A\XM5-01_03_00_000_REV_A.axf" - 0 Error(s), 25 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.4.2.0.pack
+                ARM::CMSIS:CORE:3.40.0
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+   * Component: CORE Version: 3.40.0
+
+<h2>Collection of Component include folders:</h2>
+  C:\Workbanch_NEW\XM5\SOFT\EMBEDDED\XM5-01_03_00_000_REV_A_test9\MDK-ARM\RTE
+  C:\Keil_v5\ARM\PACK\ARM\CMSIS\4.2.0\CMSIS\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:3.40.0
+      Source file:   CMSIS\UserCodeTemplates\ARM\ITM_Retarget.c
+ystem_stm32f4xx.c...
+compiling stm32f4xx_hal_flash.c...
+compiling stm32f4xx_hal_adc_ex.c...
+compiling stm32f4xx_hal.c...
+compiling stm32f4xx_hal_dac.c...
+compiling stm32f4xx_hal_i2c.c...
+compiling stm32f4xx_hal_flash_ex.c...
+compiling stm32f4xx_hal_gpio.c...
+compiling stm32f4xx_hal_tim_ex.c...
+compiling stm32f4xx_hal_dma.c...
+compiling stm32f4xx_hal_dma_ex.c...
+compiling stm32f4xx_hal_pwr_ex.c...
+compiling stm32f4xx_hal_i2c_ex.c...
+compiling stm32f4xx_hal_adc.c...
+compiling stm32f4xx_hal_flash_ramfunc.c...
+compiling stm32f4xx_hal_rcc.c...
+compiling stm32f4xx_hal_cortex.c...
+compiling stm32f4xx_hal_rcc_ex.c...
+compiling stm32f4xx_hal_pwr.c...
+compiling stm32f4xx_hal_dac_ex.c...
+compiling stm32f4xx_hal_tim.c...
+compiling stm32f4xx_hal_uart.c...
+linking...
+Program Size: Code=22532 RO-data=1064 RW-data=140 ZI-data=17764  
+FromELF: creating hex file...
+"XM5-01_03_00_000_REV_A\XM5-01_03_00_000_REV_A.axf" - 0 Error(s), 28 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.4.2.0.pack
+                ARM::CMSIS:CORE:3.40.0
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+   * Component: CORE Version: 3.40.0
+
+<h2>Collection of Component include folders:</h2>
+  C:\Workbanch_NEW\XM5\SOFT\EMBEDDED\XM5-01_03_00_000_REV_A_test9\MDK-ARM\RTE
+  C:\Keil_v5\ARM\PACK\ARM\CMSIS\4.2.0\CMSIS\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:3.40.0
+      Source file:   CMSIS\UserCodeTemplates\ARM\ITM_Retarget.c

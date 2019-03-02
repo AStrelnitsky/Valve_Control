@@ -55,3 +55,5 @@ xm5-01_03_00_000_rev_a\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Sourc
 xm5-01_03_00_000_rev_a\stm32f4xx_it.o: ..\MDK-ARM\rs485.h
 xm5-01_03_00_000_rev_a\stm32f4xx_it.o: ../Inc/usart.h
 xm5-01_03_00_000_rev_a\stm32f4xx_it.o: ..\MDK-ARM\XM5-01_03_00_000_REV_A.h
+xm5-01_03_00_000_rev_a\stm32f4xx_it.o: ..\MDK-ARM\servo.h
+xm5-01_03_00_000_rev_a\stm32f4xx_it.o: ..\MDK-ARM\XM5-01_03_00_000_REV_A.h
