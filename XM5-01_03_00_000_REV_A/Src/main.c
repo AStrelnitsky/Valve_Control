@@ -259,7 +259,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		HAL_TIM_Base_Stop(&htim2);
 		HAL_UART_Abort_IT(&huart2);
 		scontrol.servo_rx_timer = RX_OVERFLOW;
-		scontrol.state = IDLE;
+		scontrol.state = SERVO_IDLE;
 	}
 	else if(htim->Instance == TIM3)
 	{

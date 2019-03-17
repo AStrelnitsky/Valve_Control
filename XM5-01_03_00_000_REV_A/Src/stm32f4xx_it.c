@@ -358,7 +358,12 @@ void HAL_UART_RxCallback(UART_HandleTypeDef *huart)
 	switch (byte_counter)
 	{
 		case 0: 
-			++byte_counter;
+			if (buff == STROB) ++byte_counter;
+			else  
+			{
+				byte_counter = 0;
+				huart->RxXferCount += 1;
+			}
 		break;
 		case 1: 
 			if (buff == HEADER) ++byte_counter;
@@ -394,7 +399,6 @@ void HAL_UART_RxCallback(UART_HandleTypeDef *huart)
 }
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	static uint8_t byte_counter;
 	if ((huart->Instance) == USART2)
 	{
 			HAL_TIM_Base_Stop_IT(&htim2);
@@ -402,7 +406,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		
 			if (scontrol.state == SERVO_WAIT_REG_WRITE_RECEIVE)
 				{
-					//scontrol.state = SERVO_READY_TO_ACTION;
+						//scontrol.state = SERVO_READY_TO_ACTION;
 						scontrol.servo_rx_timer = RX_CLEAR;
 						scontrol.state = SERVO_WAIT_ACTION_TRANSMIT;
 						scontrol.sdir = STX;
@@ -415,11 +419,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			else if (scontrol.state == SERVO_WAIT_READ_RECEIVE)
 			{
 				scontrol.servos[scontrol.s_counter].mode = scontrol.rx_buffer[9];
-				scontrol.state = IDLE;
+				scontrol.state = SERVO_IDLE;
 			}
 			else
 				{
-					scontrol.state = IDLE;
+					scontrol.state = SERVO_IDLE;
 					
 				}
 	}

@@ -9,15 +9,15 @@ struct RS485 rs485;
 
 void SelectDirection(struct RS485* rs);
 void ParseIncoming (struct RS485 *rs, struct SControl* sc);
-void inline ParseMainMode (struct RS485 *rs, struct SControl* sc);
-void inline ParseSettingMode (struct RS485 *rs, struct SControl* sc);
-void  ParseBypass (struct RS485 *rs, struct SControl* sc);
+void ParseMainMode (struct RS485 *rs, struct SControl* sc);
+void ParseSettingMode (struct RS485 *rs, struct SControl* sc);
+void ParseBypass (struct RS485 *rs, struct SControl* sc);
 void RsTransmit(struct RS485* rs);
 uint16_t CalculateCRC ( uint8_t *data, uint8_t length, CRC_TYPE crc);
 void ConstractSendMessage (struct RS485* rs, struct SControl* sc, uint8_t err_code);
-void inline ConstructBypassMessage (struct RS485* rs, struct SControl* sc, uint8_t err_code);
+void ConstructBypassMessage (struct RS485* rs, struct SControl* sc, uint8_t err_code);
 void ConstructMainModeMessage (struct RS485* rs, struct SControl* sc, uint8_t err_code);
-void inline ConstructSettingModeMessage (struct RS485* rs, struct SControl* sc, uint8_t err_code);
+void ConstructSettingModeMessage (struct RS485* rs, struct SControl* sc, uint8_t err_code);
 
 uint8_t CheckCRC(uint8_t * arr, uint8_t length);
 static void simpleDelay(uint16_t delay);
@@ -61,7 +61,7 @@ void ParseIncoming(struct RS485 *rs, struct SControl *sc)
 }
 uint8_t CheckCRC(uint8_t *arr, uint8_t length)
 {
-	if (arr[length - 1] == 0xDC) // fake
+	if (arr[length - 1] == CalculateCRC( arr, length, rs485.crc_type)) 
 	{
 		return 1;
 	}
@@ -110,7 +110,7 @@ void ConstractSendMessage (struct RS485* rs, struct SControl* sc, uint8_t err_co
 		}
 		RsTransmit(rs);
 }
-void inline ParseBypass (struct RS485 *rs, struct SControl* sc) // Subprotocol for direct control servos. Not work, developing/
+void ParseBypass (struct RS485 *rs, struct SControl* sc) // Subprotocol for direct control servos. Not work, developing/
 {
 	uint8_t param = rs->rx_buffer[SERVO_PING_BYTE];
 	if (param == PING_MODE)
@@ -144,18 +144,18 @@ void inline ParseBypass (struct RS485 *rs, struct SControl* sc) // Subprotocol f
 			ConstractSendMessage (rs, sc, ERROR_NO);
 			rs->state = IDLE;
 }
-void inline ParseMainMode (struct RS485 *rs, struct SControl* sc) // Main protocol
+void ParseMainMode (struct RS485 *rs, struct SControl* sc) // Main protocol
 {
 		uint8_t err = ERROR_NO;
 	
 
-		if (rs->rx_buffer[LENGTH_BYTE] > (((sc->number_of_servos) << 1) + (rs->crc_length) + 1))
+		if (rs->rx_buffer_length > ((NUMBER_OF_SERVOS << 1) + (rs->crc_length) + 1))
 		{
 			err = ERROR_LENGTH;
 		}
 		else
 		{
-			for (int i = 0; i < (sc->number_of_servos); i++)
+			for (int i = 0; i < NUMBER_OF_SERVOS; i++)
 				
 					{
 						sc->servos[i].control[0] = rs->rx_buffer[SERVO_GOAL_ANGLE_0_L_CM + 2*i];
@@ -167,11 +167,11 @@ void inline ParseMainMode (struct RS485 *rs, struct SControl* sc) // Main protoc
 				
 	rs->state = IDLE;
 }
-void inline ParseSettingMode (struct RS485 *rs, struct SControl* sc)
+void ParseSettingMode (struct RS485 *rs, struct SControl* sc)
 {
 	;
 }
-void inline ConstructBypassMessage (struct RS485* rs, struct SControl* sc, uint8_t err_code)
+void ConstructBypassMessage (struct RS485* rs, struct SControl* sc, uint8_t err_code)
 {
 		rs->tx_buffer[LENGTH_BYTE] = NUMBER_OF_SERVOS + 2;
 		for (int i = 0; i < NUMBER_OF_SERVOS; i++)
@@ -209,11 +209,11 @@ void ConstructMainModeMessage (struct RS485* rs, struct SControl* sc, uint8_t er
 				
 				for (int i = 0; i < (sc->number_of_servos); ++i)
 				{
-					rs->tx_buffer[FUNCTION_CODE + 2*i + 1] = sc->servos[i].angle[0]; // current servo angles (10 bits)
-					rs->tx_buffer[FUNCTION_CODE + 2*i + 2] = sc->servos[i].angle[1]; // 6 high bits of sc->servos[x].angle[1] - is error flags. There means will describe later
+					rs->tx_buffer[FUNCTION_CODE + 4 + 2*i + 1] = sc->servos[i].angle[0]; // current servo angles (10 bits)
+					rs->tx_buffer[FUNCTION_CODE + 4 + 2*i + 2] = sc->servos[i].angle[1]; // 6 high bits of sc->servos[x].angle[1] - is error flags. There means will describe later
 				}
-					rs->tx_buffer[FUNCTION_CODE + 2*(sc->number_of_servos)] = 0; /// where will be write humidity data
-					rs->tx_buffer[FUNCTION_CODE + 2*(sc->number_of_servos) + 1] = 0; /// where will be write current consumption data
+					rs->tx_buffer[FUNCTION_CODE + 4 + 2*(sc->number_of_servos)] = 0; /// where will be write humidity data
+					rs->tx_buffer[FUNCTION_CODE + 4 + 2*(sc->number_of_servos) + 1] = 0; /// where will be write current consumption data
 			}
 			else if (rs->rx_buffer[FUNCTION_CODE] == MAIN_MODE_2) // send servos angels and humidity
 			{
@@ -251,10 +251,10 @@ void ConstructMainModeMessage (struct RS485* rs, struct SControl* sc, uint8_t er
 	length = (rs->tx_buffer[LENGTH_BYTE]) + 3;
 	crc = CalculateCRC ( rs->tx_buffer, length, rs->crc_type);
 	rs->tx_buffer[length - rs485.crc_length] = (0x0F & crc);
-	rs->tx_buffer[length - rs485.crc_length + 1] = ( crc >> 8);
+	//rs->tx_buffer[length - rs485.crc_length + 1] = ( crc >> 8);
 	/////////////////////////////////////////////////
 }
-void inline ConstructSettingModeMessage (struct RS485* rs, struct SControl* sc, uint8_t err_code)
+void ConstructSettingModeMessage (struct RS485* rs, struct SControl* sc, uint8_t err_code)
 {
 	;
 }
@@ -265,17 +265,17 @@ uint16_t CalculateCRC ( uint8_t *data, uint8_t length, CRC_TYPE crc)
 	
  if (crc == XOR_2) // choise CRC type
 	{
-		for (int i = 3; i < length; ++i)
+		for (int i = 0; i < length - 1; ++i)
 		{
-			accum_2 = accum_2  ^= data[i];
+			accum_2 = accum_2  ^ data[i];
 		}
 		return accum_2;
 	}
 	else if (crc == XOR_1)
 	{
-		for (int i = 3; i < length; ++i)
+		for (int i = 0; i < length - 1; ++i)
 		{
-			accum_1 = accum_1  ^= data[i];
+			accum_1 = accum_1  ^ data[i];
 		}
 		return (uint16_t) accum_1;
 	}
