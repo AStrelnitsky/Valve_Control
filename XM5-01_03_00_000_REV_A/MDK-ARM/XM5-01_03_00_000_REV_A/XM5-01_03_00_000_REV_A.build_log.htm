@@ -37,10 +37,50 @@ rs485.c(282): warning:  #940-D: missing return statement at end of non-void func
 rs485.c(70): warning:  #177-D: function "simpleDelay" was declared but never referenced
   static void simpleDelay(uint16_t delay)
 rs485.c: 5 warnings, 0 errors
+compiling stm32f4xx_it.c...
+stm32f4xx_it.c: Warning: C4008W: splitting LDM/STM has no benefit
+../Src/stm32f4xx_it.c(419): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                                                SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(420): warning:  #223-D: function "constructControlMessage" declared implicitly
+                                                constructControlMessage(&scontrol, ACTION);
+../Src/stm32f4xx_it.c(451): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(463): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(472): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(487): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(497): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(505): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(514): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(521): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
+                        SelectDaisyDirection(&scontrol);
+../Src/stm32f4xx_it.c(533): warning:  #223-D: function "SelectDirection" declared implicitly
+                        SelectDirection(&rs485);
+../Src/stm32f4xx_it.c: 12 warnings, 0 errors
+compiling freertos.c...
+freertos.c: Warning: C4008W: splitting LDM/STM has no benefit
+../Src/freertos.c(172): warning:  #223-D: function "ParseIncoming" declared implicitly
+                        ParseIncoming(&rs485, &scontrol);
+../Src/freertos.c: 2 warnings, 0 errors
+compiling main.c...
+main.c: Warning: C4008W: splitting LDM/STM has no benefit
+../Src/main.c: 1 warning, 0 errors
+compiling servo.c...
+servo.c: Warning: C4008W: splitting LDM/STM has no benefit
+servo.c(76): warning:  #223-D: function "memset" declared implicitly
+        memset((sc->tx_buffer), 0, DAISY_TX_MAX_SIZE);
+servo.c(350): warning:  #177-D: variable "buff" was declared but never referenced
+        uint8_t buff = 0;
+servo.c: 3 warnings, 0 errors
 linking...
-Program Size: Code=27500 RO-data=1064 RW-data=140 ZI-data=17700  
+Program Size: Code=27556 RO-data=1064 RW-data=144 ZI-data=17704  
 FromELF: creating hex file...
-"XM5-01_03_00_000_REV_A\XM5-01_03_00_000_REV_A.axf" - 0 Error(s), 5 Warning(s).
+"XM5-01_03_00_000_REV_A\XM5-01_03_00_000_REV_A.axf" - 0 Error(s), 23 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -66,8 +106,3 @@ Application running ...
 </pre>
 </body>
 </html>
-Load "XM5-01_03_00_000_REV_A\\XM5-01_03_00_000_REV_A.axf" 
-Erase Done.
-Programming Done.
-Verify OK.
-Application running ...

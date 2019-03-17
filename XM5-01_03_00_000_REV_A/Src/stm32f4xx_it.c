@@ -408,12 +408,19 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				{
 						//scontrol.state = SERVO_READY_TO_ACTION;
 						scontrol.servo_rx_timer = RX_CLEAR;
+					if(scontrol.s_counter < NUMBER_OF_SERVOS - 1)
+					{
+						scontrol.state = SERVO_IDLE;
+					}
+					else
+					{
 						scontrol.state = SERVO_WAIT_ACTION_TRANSMIT;
 						scontrol.sdir = STX;
 						SelectDaisyDirection(&scontrol);
 						constructControlMessage(&scontrol, ACTION);
 						HAL_UART_Transmit_IT(&huart2, (scontrol.tx_buffer), 10 + XL_ACTION_PARAMETR_SIZE);			
 						HAL_TIM_Base_Start_IT(&htim2);
+					}
 				
 				}
 			else if (scontrol.state == SERVO_WAIT_READ_RECEIVE)

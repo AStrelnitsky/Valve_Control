@@ -3,7 +3,7 @@
 <title>Static Call Graph - [XM5-01_03_00_000_REV_A\XM5-01_03_00_000_REV_A.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image XM5-01_03_00_000_REV_A\XM5-01_03_00_000_REV_A.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5050041: Last Updated: Sun Mar 17 11:49:20 2019
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5050041: Last Updated: Sun Mar 17 17:18:27 2019
 <BR><P>
 <H3>Maximum Stack Usage =        624 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -1100,7 +1100,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[31]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART3_IRQHandler
 </UL>
 
-<P><STRONG><a name="[d8]"></a>HAL_UART_RxCpltCallback</STRONG> (Thumb, 162 bytes, Stack size 8 bytes, stm32f4xx_it.o(i.HAL_UART_RxCpltCallback))
+<P><STRONG><a name="[d8]"></a>HAL_UART_RxCpltCallback</STRONG> (Thumb, 182 bytes, Stack size 8 bytes, stm32f4xx_it.o(i.HAL_UART_RxCpltCallback))
 <BR><BR>[Stack]<UL><LI>Max Depth = 568<LI>Call Chain = HAL_UART_RxCpltCallback &rArr; constructControlMessage &rArr; update_crc
 </UL>
 <BR>[Calls]<UL><LI><a href="#[dc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xQueueGiveFromISR
@@ -1204,7 +1204,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[5b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[f0]"></a>MX_FREERTOS_Init</STRONG> (Thumb, 112 bytes, Stack size 64 bytes, freertos.o(i.MX_FREERTOS_Init))
+<P><STRONG><a name="[f0]"></a>MX_FREERTOS_Init</STRONG> (Thumb, 146 bytes, Stack size 64 bytes, freertos.o(i.MX_FREERTOS_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 232<LI>Call Chain = MX_FREERTOS_Init &rArr; osThreadCreate &rArr; xTaskCreate &rArr; pvPortMalloc &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[f2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xQueueGenericSend
@@ -1470,7 +1470,7 @@ Global Symbols
 
 <P><STRONG><a name="[156]"></a>__scatterload_zeroinit</STRONG> (Thumb, 14 bytes, Stack size unknown bytes, handlers.o(i.__scatterload_zeroinit), UNUSED)
 
-<P><STRONG><a name="[da]"></a>constructControlMessage</STRONG> (Thumb, 786 bytes, Stack size 24 bytes, servo.o(i.constructControlMessage))
+<P><STRONG><a name="[da]"></a>constructControlMessage</STRONG> (Thumb, 780 bytes, Stack size 24 bytes, servo.o(i.constructControlMessage))
 <BR><BR>[Stack]<UL><LI>Max Depth = 560<LI>Call Chain = constructControlMessage &rArr; update_crc
 </UL>
 <BR>[Calls]<UL><LI><a href="#[10d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;update_crc

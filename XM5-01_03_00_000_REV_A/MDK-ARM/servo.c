@@ -21,10 +21,20 @@ void startServoControl(void)
 	SelectDaisyDirection(&scontrol);
 	
 	if (scontrol.s_counter < NUMBER_OF_SERVOS - 1 )
+	//if (scontrol.number_of_servos < scontrol.number_of_servos - 1)
 	{
 		++(scontrol.s_counter);
 	}
-	else scontrol.s_counter = 0;
+	else 
+	{
+		scontrol.s_counter = 0;
+		//scontrol.state = SERVO_WAIT_ACTION_TRANSMIT;
+	//	scontrol.sdir = STX;
+		//SelectDaisyDirection(&scontrol);
+	//	constructControlMessage(&scontrol, ACTION);
+		//HAL_UART_Transmit_IT(&huart2, (scontrol.tx_buffer), 10 + XL_ACTION_PARAMETR_SIZE);			
+		//HAL_TIM_Base_Start_IT(&htim2);
+	}
 	
 	if ( scontrol.servos[scontrol.s_counter].ping == 1 )
 	{
@@ -244,7 +254,7 @@ void constructControlMessage(struct SControl* sc, uint8_t param)
 		sc->tx_buffer[HEADER2_BYTE]     = 	HEADER2;
 		sc->tx_buffer[HEADER3_BYTE]     = 	HEADER3;
 		sc->tx_buffer[RESERVED_BYTE]    = RESERVED;
-		sc->tx_buffer[ID_BYTE] 			    = (sc->servos[num].ID);
+		sc->tx_buffer[ID_BYTE] 			    = BROADCAST_ID;//(sc->servos[num].ID);
 		sc->tx_buffer[LEN_L_BYTE]       = (uint8_t) len;
 		sc->tx_buffer[LEN_H_BYTE]       = (uint8_t) (len >> 8);
 		sc->tx_buffer[INSTRUCTION_BYTE] = param;
