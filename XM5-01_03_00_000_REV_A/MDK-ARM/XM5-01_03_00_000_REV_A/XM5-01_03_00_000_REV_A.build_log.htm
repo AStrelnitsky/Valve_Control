@@ -8,101 +8,20 @@ Copyright (C) 2014 ARM Ltd and ARM Germany GmbH. All rights reserved.
 License Information: Anatoly Main, GROV, LIC=----
  
 Tool Versions:
-Toolchain:       MDK-Lite  Version: 5.12.0.0
-Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
+Toolchain:       MDK-Lite  Version: <unknown>
+Toolchain Path:  C:\Keil_v5\ARM\ARMCC\bin\
 C Compiler:      Armcc.exe V5.05 (build 41)
 Assembler:       Armasm.exe V5.05 (build 41)
 Linker/Locator:  ArmLink.exe V5.05 (build 41)
 Library Manager: ArmAr.exe V5.05 (build 41)
 Hex Converter:   FromElf.exe V5.05 (build 41)
-CPU DLL:         SARMCM3.DLL V5.12.0.0
-Dialog DLL:      DCM.DLL V1.13.0.0
+CPU DLL:         SARMCM3.DLL
+Dialog DLL:      DCM.DLL
     Target DLL: STLink\ST-LINKIII-KEIL_SWO.dll
-Dialog DLL:      TCM.DLL V1.14.2.0
+Dialog DLL:      TCM.DLL
  
 <h2>Project:</h2>
 C:\Workbanch_NEW\XM5\SOFT\EMBEDDED\git\Valve_Control\XM5-01_03_00_000_REV_A\MDK-ARM\XM5-01_03_00_000_REV_A.uvprojx
-Project File Date:  03/16/2019
+Project File Date:  03/31/2019
 
 <h2>Output:</h2>
-Build target 'XM5-01_03_00_000_REV_A'
-compiling rs485.c...
-rs485.c: Warning: C4008W: splitting LDM/STM has no benefit
-rs485.c(60): warning:  #223-D: function "memset" declared implicitly
-        memset((rs->rx_buffer), 0, RS485_RX_SIZE);
-rs485.c(73): warning:  #174-D: expression has no effect
-        for (i; i <= delay; ++i)
-rs485.c(282): warning:  #940-D: missing return statement at end of non-void function "CalculateCRC"
-  }
-rs485.c(70): warning:  #177-D: function "simpleDelay" was declared but never referenced
-  static void simpleDelay(uint16_t delay)
-rs485.c: 5 warnings, 0 errors
-compiling stm32f4xx_it.c...
-stm32f4xx_it.c: Warning: C4008W: splitting LDM/STM has no benefit
-../Src/stm32f4xx_it.c(419): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
-                                                SelectDaisyDirection(&scontrol);
-../Src/stm32f4xx_it.c(420): warning:  #223-D: function "constructControlMessage" declared implicitly
-                                                constructControlMessage(&scontrol, ACTION);
-../Src/stm32f4xx_it.c(451): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
-                        SelectDaisyDirection(&scontrol);
-../Src/stm32f4xx_it.c(463): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
-                        SelectDaisyDirection(&scontrol);
-../Src/stm32f4xx_it.c(472): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
-                        SelectDaisyDirection(&scontrol);
-../Src/stm32f4xx_it.c(487): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
-                        SelectDaisyDirection(&scontrol);
-../Src/stm32f4xx_it.c(497): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
-                        SelectDaisyDirection(&scontrol);
-../Src/stm32f4xx_it.c(505): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
-                        SelectDaisyDirection(&scontrol);
-../Src/stm32f4xx_it.c(514): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
-                        SelectDaisyDirection(&scontrol);
-../Src/stm32f4xx_it.c(521): warning:  #223-D: function "SelectDaisyDirection" declared implicitly
-                        SelectDaisyDirection(&scontrol);
-../Src/stm32f4xx_it.c(533): warning:  #223-D: function "SelectDirection" declared implicitly
-                        SelectDirection(&rs485);
-../Src/stm32f4xx_it.c: 12 warnings, 0 errors
-compiling freertos.c...
-freertos.c: Warning: C4008W: splitting LDM/STM has no benefit
-../Src/freertos.c(172): warning:  #223-D: function "ParseIncoming" declared implicitly
-                        ParseIncoming(&rs485, &scontrol);
-../Src/freertos.c: 2 warnings, 0 errors
-compiling main.c...
-main.c: Warning: C4008W: splitting LDM/STM has no benefit
-../Src/main.c: 1 warning, 0 errors
-compiling servo.c...
-servo.c: Warning: C4008W: splitting LDM/STM has no benefit
-servo.c(76): warning:  #223-D: function "memset" declared implicitly
-        memset((sc->tx_buffer), 0, DAISY_TX_MAX_SIZE);
-servo.c(350): warning:  #177-D: variable "buff" was declared but never referenced
-        uint8_t buff = 0;
-servo.c: 3 warnings, 0 errors
-linking...
-Program Size: Code=27556 RO-data=1064 RW-data=144 ZI-data=17704  
-FromELF: creating hex file...
-"XM5-01_03_00_000_REV_A\XM5-01_03_00_000_REV_A.axf" - 0 Error(s), 23 Warning(s).
-
-<h2>Software Packages used:</h2>
-
-Package Vendor: ARM
-                http://www.keil.com/pack/ARM.CMSIS.4.2.0.pack
-                ARM::CMSIS:CORE:3.40.0
-                CMSIS (Cortex Microcontroller Software Interface Standard)
-   * Component: CORE Version: 3.40.0
-
-<h2>Collection of Component include folders:</h2>
-  C:\Workbanch_NEW\XM5\SOFT\EMBEDDED\git\Valve_Control\XM5-01_03_00_000_REV_A\MDK-ARM\RTE
-  C:\Keil_v5\ARM\PACK\ARM\CMSIS\4.2.0\CMSIS\Include
-
-<h2>Collection of Component Files used:</h2>
-
-   * Component: ARM::CMSIS:CORE:3.40.0
-      Source file:   CMSIS\UserCodeTemplates\ARM\ITM_Retarget.c
-Load "XM5-01_03_00_000_REV_A\\XM5-01_03_00_000_REV_A.axf" 
-Erase Done.
-Programming Done.
-Verify OK.
-Application running ...
-</pre>
-</body>
-</html>

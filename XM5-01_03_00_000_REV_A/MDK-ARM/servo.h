@@ -5,7 +5,7 @@
 
 #define DAISY_DIR_TRANSMIT GPIOE, GPIO_PIN_3, GPIO_PIN_SET
 #define DAISY_DIR_RECEIVE GPIOE, GPIO_PIN_3, GPIO_PIN_RESET
-#define SERVO_RX_TIMEOUT 100000
+#define SERVO_RX_TIMEOUT 2000
 
 #define DAISY_RX_MAX_SIZE 16
 #define DAISY_TX_MAX_SIZE 16
@@ -46,11 +46,17 @@
 #define ACTION 			  0x5
 #define F_RESET 			0x6
 #define ID_WRITE      0x7
+#define POSITION_READ 0x8
+#define SPEED_READ 		0x9
 
 #define XL_GOAL_VELOCITY_ADDRESS_L 32
 #define XL_GOAL_VELOCITY_ADDRESS_H 0x00
 #define XL_GOAL_POSITION_ADDRESS_L 30
 #define XL_GOAL_POSITION_ADDRESS_H 0x00
+#define XL_CURRENT_POSITION_ADDRESS_L 37
+#define XL_CURRENT_POSITION_ADDRESS_H 0x00
+#define XL_CURRENT_SPEED_ADDRESS_L 39
+#define XL_CURRENT_SPEED_ADDRESS_H 0x00
 #define XL_CONTROL_MODE_ADDRESS_L	 11
 #define XL_CONTROL_MODE_ADDRESS_H  0
 #define XL_ID_ADDRESS_L	 					 3
@@ -73,8 +79,9 @@ struct SERVO
 {
 	uint8_t ID;
 	uint8_t new_ID;
-	uint8_t angle [4];
-	uint8_t control[4];
+	uint8_t angle [2];
+	uint8_t control [2];
+	uint8_t speed [2];
 	int16_t torque;
 	uint8_t ping;
 	uint8_t new_mode;
@@ -89,14 +96,16 @@ enum TYPE_OF_MESSAGE
 	TOGGLE_MODE,
 	FACT_RESET,
 	WRITE_ID,
-	DATA_REQUEST
+	DATA_REQUEST,
+	READ_POSITION,
+	READ_SPEED
 };
 struct SControl
 {
 	uint8_t number_of_servos;
 	uint8_t IDs[NUMBER_OF_SERVOS];
 	struct SERVO servos [NUMBER_OF_SERVOS];//*servos;
-	uint8_t s_counter;
+	uint8_t s_counter,send_counter;
 	uint8_t servo_control;
 enum 
 {
@@ -119,7 +128,11 @@ enum
 	SERVO_WAIT_FACTORY_RESET_RECEIVE,
 	SERVO_WAIT_WRITE_ID_TRANSMIT,
 	SERVO_WAIT_WRITE_ID_RECEIVE,
-	SERVO_READY_TO_ACTION
+	SERVO_READY_TO_ACTION,
+	SERVO_WAIT_READ_POSITION_TRANSMIT,
+	SERVO_WAIT_READ_POSITION_RECEIVE,
+	SERVO_WAIT_READ_SPEED_TRANSMIT,
+	SERVO_WAIT_READ_SPEED_RECEIVE
 } state;
 enum
 {
@@ -145,3 +158,4 @@ void servoInit(struct SControl*);
 void startServoControl(void);
 void sendMessage(struct SControl*, enum TYPE_OF_MESSAGE);
 void servoPing(struct SControl*, uint8_t ID);
+unsigned short crc_check(unsigned char *data_blk_ptr, unsigned short data_blk_size);

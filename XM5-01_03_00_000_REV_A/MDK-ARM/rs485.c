@@ -61,11 +61,18 @@ void ParseIncoming(struct RS485 *rs, struct SControl *sc)
 }
 uint8_t CheckCRC(uint8_t *arr, uint8_t length)
 {
-	if (arr[length - 1] == CalculateCRC( arr, length, rs485.crc_type)) 
+	if (arr[FUNCTION_CODE] != SERVO_BYPASS)
+	{
+		if (arr[length - 1] == CalculateCRC( arr, length, rs485.crc_type)) 
+		{
+			return 1;
+		}
+		else return 0;
+	}
+	else 
 	{
 		return 1;
 	}
-	else return 0;
 }
 static void simpleDelay(uint16_t delay)
 {
@@ -91,7 +98,7 @@ void ConstractSendMessage (struct RS485* rs, struct SControl* sc, uint8_t err_co
 		
 		if ((rs->rx_buffer[FUNCTION_CODE]) == SERVO_BYPASS) // Subprotocol for direct control servos. Not work, developing/
 		{
-			
+			sc->servo_control = 0;
 			ConstructBypassMessage (rs, sc, err_code);
 
 		}
@@ -100,6 +107,7 @@ void ConstractSendMessage (struct RS485* rs, struct SControl* sc, uint8_t err_co
 			
 			if ((rs->rx_buffer[FUNCTION_CODE]) != CONTROL_ONLY)
 			{
+				sc->servo_control = 1;
 				ConstructMainModeMessage (rs, sc, err_code);
 			}
 			
@@ -112,12 +120,34 @@ void ConstractSendMessage (struct RS485* rs, struct SControl* sc, uint8_t err_co
 }
 void ParseBypass (struct RS485 *rs, struct SControl* sc) // Subprotocol for direct control servos. Not work, developing/
 {
-	uint8_t param = rs->rx_buffer[SERVO_PING_BYTE];
-	if (param == PING_MODE)
-			{
-				//sc->servos[i].ping = 1;
-			}
-			else if ((param == WHEEL_MODE) || (param == JOINT_MODE))
+	uint8_t param = (rs->rx_buffer[SERVO_DIRECT_PARAM_BYTE]);
+	
+	
+	if(param == NEW_ID)
+		{
+			sc->servos[0].new_ID = rs->rx_buffer[SERVO_DATA_0_L_DSM];
+			sc->servos[1].new_ID = rs->rx_buffer[SERVO_DATA_1_L_DSM];
+			sc->servos[2].new_ID = rs->rx_buffer[SERVO_DATA_2_L_DSM];
+			sc->servos[3].new_ID = rs->rx_buffer[SERVO_DATA_3_L_DSM];
+		}
+	else if (param == NEW_MODE)
+		{
+			sc->servos[0].new_mode = rs->rx_buffer[SERVO_DATA_0_L_DSM];
+			sc->servos[1].new_mode = rs->rx_buffer[SERVO_DATA_1_L_DSM];
+			sc->servos[2].new_mode = rs->rx_buffer[SERVO_DATA_2_L_DSM];
+			sc->servos[3].new_mode = rs->rx_buffer[SERVO_DATA_3_L_DSM];
+		}
+		else if(param == FACTORy_RESET)
+		{
+			sc->servos[0].freset = rs->rx_buffer[SERVO_DATA_0_L_DSM];
+			sc->servos[1].freset = rs->rx_buffer[SERVO_DATA_1_L_DSM];
+			sc->servos[2].freset = rs->rx_buffer[SERVO_DATA_2_L_DSM];
+			sc->servos[3].freset = rs->rx_buffer[SERVO_DATA_3_L_DSM];
+		}
+
+		
+			/*
+	else if ((param == WHEEL_MODE) || (param == JOINT_MODE))
 			{
 				sc->servos[0].new_mode = param / 0x0F - 1;
 			}
@@ -131,7 +161,7 @@ void ParseBypass (struct RS485 *rs, struct SControl* sc) // Subprotocol for dire
 					sc->servos[i].control[1] = rs->rx_buffer[SERVO_GOAL_ANGLE_1 + 2*i];
 				}
 			} */
-			
+			/*
 			else if (param == FACTORY_RESET)
 			{
 			//	sc->servos[i].freset = 1;
@@ -140,9 +170,9 @@ void ParseBypass (struct RS485 *rs, struct SControl* sc) // Subprotocol for dire
 			{
 //				sc->servos[i].new_ID = param;
 			}
-			
+			*/
 			ConstractSendMessage (rs, sc, ERROR_NO);
-			rs->state = IDLE;
+			rs->state = IDLE; 
 }
 void ParseMainMode (struct RS485 *rs, struct SControl* sc) // Main protocol
 {
@@ -196,7 +226,7 @@ void ConstructMainModeMessage (struct RS485* rs, struct SControl* sc, uint8_t er
 	uint16_t length,crc = 0;
 	if (err_code == ERROR_NO) // if haven't errors, we are copying incoming function code to sending function code and constructing message accroding the STATUS byte
 		{
-			rs->tx_buffer[FUNCTION_CODE] = rs->rx_buffer[FUNCTION_CODE];
+			rs->tx_buffer[FUNCTION_CODE + 4] = rs->rx_buffer[FUNCTION_CODE];
 			
 			if (rs->rx_buffer[FUNCTION_CODE] == CONTROL_WITH_RESPONSE ) // no sending data
 			{
@@ -207,13 +237,22 @@ void ConstructMainModeMessage (struct RS485* rs, struct SControl* sc, uint8_t er
 			{
 				rs->tx_buffer[LENGTH_BYTE] = 3 + 2*(sc->number_of_servos) + rs485.crc_length;
 				
-				for (int i = 0; i < (sc->number_of_servos); ++i)
-				{
-					rs->tx_buffer[FUNCTION_CODE + 4 + 2*i + 1] = sc->servos[i].angle[0]; // current servo angles (10 bits)
-					rs->tx_buffer[FUNCTION_CODE + 4 + 2*i + 2] = sc->servos[i].angle[1]; // 6 high bits of sc->servos[x].angle[1] - is error flags. There means will describe later
-				}
-					rs->tx_buffer[FUNCTION_CODE + 4 + 2*(sc->number_of_servos)] = 0; /// where will be write humidity data
-					rs->tx_buffer[FUNCTION_CODE + 4 + 2*(sc->number_of_servos) + 1] = 0; /// where will be write current consumption data
+				
+					for (int i = 0; i < (NUMBER_OF_SERVOS - 1); ++i)
+					{
+						if (sc->servos[i].mode == 2)
+						{
+							rs->tx_buffer[FUNCTION_CODE + 4 + 2*i + 1] = sc->servos[i].angle[0]; // current servo angles (10 bits)
+							rs->tx_buffer[FUNCTION_CODE + 4 + 2*i + 2] = sc->servos[i].angle[1]; // 6 high bits of sc->servos[x].angle[1] - is error flags. There means will describe later
+						}
+						else
+						{
+							rs->tx_buffer[FUNCTION_CODE + 4 + 2*i + 1] = sc->servos[i].speed[0]; // current servo angles (10 bits)
+							rs->tx_buffer[FUNCTION_CODE + 4 + 2*i + 2] = sc->servos[i].speed[1]; // 6 high bits of sc->servos[x].angle[1] - is error flags. There means will describe later
+						}
+					}
+					rs->tx_buffer[FUNCTION_CODE + 4 + 2*(sc->number_of_servos) + 1] = 0; /// where will be write humidity data
+					rs->tx_buffer[FUNCTION_CODE + 4 + 2*(sc->number_of_servos) + 2] = 0; /// where will be write current consumption data
 			}
 			else if (rs->rx_buffer[FUNCTION_CODE] == MAIN_MODE_2) // send servos angels and humidity
 			{

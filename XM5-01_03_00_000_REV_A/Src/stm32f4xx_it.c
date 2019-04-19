@@ -261,7 +261,7 @@ void TIM2_IRQHandler(void)
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
-	
+	scontrol.state = SERVO_IDLE;
   /* USER CODE END TIM2_IRQn 1 */
 }
 
@@ -399,21 +399,23 @@ void HAL_UART_RxCallback(UART_HandleTypeDef *huart)
 }
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+	uint16_t crc = 0;
 	if ((huart->Instance) == USART2)
 	{
 			HAL_TIM_Base_Stop_IT(&htim2);
 			scontrol.servo_rx_timer = RX_COMPLETE;
-		
+			
 			if (scontrol.state == SERVO_WAIT_REG_WRITE_RECEIVE)
 				{
 						//scontrol.state = SERVO_READY_TO_ACTION;
-						scontrol.servo_rx_timer = RX_CLEAR;
+					scontrol.servo_rx_timer = RX_CLEAR;
 					if(scontrol.s_counter < NUMBER_OF_SERVOS - 1)
 					{
 						scontrol.state = SERVO_IDLE;
 					}
 					else
 					{
+						//scontrol.state = SERVO_IDLE;
 						scontrol.state = SERVO_WAIT_ACTION_TRANSMIT;
 						scontrol.sdir = STX;
 						SelectDaisyDirection(&scontrol);
@@ -421,18 +423,75 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 						HAL_UART_Transmit_IT(&huart2, (scontrol.tx_buffer), 10 + XL_ACTION_PARAMETR_SIZE);			
 						HAL_TIM_Base_Start_IT(&htim2);
 					}
-				
+						
 				}
 			else if (scontrol.state == SERVO_WAIT_READ_RECEIVE)
 			{
+				scontrol.servo_rx_timer = RX_COMPLETE;
 				scontrol.servos[scontrol.s_counter].mode = scontrol.rx_buffer[9];
 				scontrol.state = SERVO_IDLE;
 			}
-			else
+			else if (scontrol.state == SERVO_WAIT_WRITE_MODE_RECEIVE)
+			{
+				scontrol.servo_rx_timer = RX_COMPLETE;
+				scontrol.state = SERVO_IDLE;
+			}
+			else if (scontrol.state == SERVO_WAIT_WRITE_ID_RECEIVE)
+			{
+				//scontrol.servo_rx_timer = RX_COMPLETE;
+				scontrol.state = SERVO_IDLE;
+			}
+			else if (scontrol.state == SERVO_WAIT_READ_POSITION_RECEIVE)
+			{
+					scontrol.servo_rx_timer = RX_CLEAR;
+					crc = update_crc (0, scontrol.rx_buffer, 11);
+				if (crc == (scontrol.rx_buffer[11] + (scontrol.rx_buffer[12] << 8)))
 				{
-					scontrol.state = SERVO_IDLE;
-					
+						scontrol.servos[scontrol.s_counter].angle[0] = scontrol.rx_buffer[9];
+						scontrol.servos[scontrol.s_counter].angle[1] = scontrol.rx_buffer[10];
 				}
+				/*
+					scontrol.state = SERVO_WAIT_REG_WRITE_TRANSMIT;
+					scontrol.sdir = STX;
+					SelectDaisyDirection(&scontrol);
+					constructControlMessage(&scontrol, REG_WRITE);
+					HAL_UART_Transmit_IT(&huart2, (scontrol.tx_buffer), 10 + XL_GOAL_POSITION_PARAMETR_SIZE);
+					htim2.Instance->ARR = SERVO_RX_TIMEOUT;
+					HAL_TIM_Base_Start_IT(&htim2);
+				*/
+				
+			//	scontrol.servo_rx_timer = RX_COMPLETE;
+				scontrol.state = SERVO_IDLE;
+			}
+				else if (scontrol.state == SERVO_WAIT_READ_SPEED_RECEIVE)
+			{
+					scontrol.servo_rx_timer = RX_CLEAR;
+				//if ( (scontrol.rx_buffer[9] + (scontrol.rx_buffer[10] << 8)) < 2048)
+				//if(crc_check(scontrol.rx_buffer, 13))
+				crc = update_crc (0, scontrol.rx_buffer, 11);
+				if (crc == (scontrol.rx_buffer[11] + (scontrol.rx_buffer[12] << 8)))
+				{
+					scontrol.servos[scontrol.s_counter].speed[0] = scontrol.rx_buffer[9];
+					scontrol.servos[scontrol.s_counter].speed[1] = scontrol.rx_buffer[10];
+				}
+				scontrol.state = SERVO_IDLE;
+			}
+				else if (scontrol.state == SERVO_WAIT_FACTORY_RESET_RECEIVE)
+			{
+				scontrol.servo_rx_timer = RX_CLEAR;
+				scontrol.state = SERVO_IDLE;
+			}
+			
+				else if (scontrol.state == SERVO_WAIT_ACTION_RECEIVE)
+			{
+				scontrol.state = SERVO_IDLE;
+			}	
+				else
+			{
+					//scontrol.servo_rx_timer = RX_CLEAR;
+					//scontrol.servo_rx_timer = RX_COMPLETE;
+					scontrol.state = SERVO_IDLE;	
+			}
 	}
 	else if ((huart->Instance) == USART3)
 	{
@@ -487,6 +546,26 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 			SelectDaisyDirection(&scontrol);
 			HAL_UART_Abort_IT(huart);
 			HAL_UART_Receive_IT(huart, (scontrol.rx_buffer), 15);
+			
+		}
+		else if (scontrol.state == SERVO_WAIT_READ_POSITION_TRANSMIT)
+		{
+			
+			scontrol.state = SERVO_WAIT_READ_POSITION_RECEIVE;
+			scontrol.sdir = SRX;
+			SelectDaisyDirection(&scontrol);
+			HAL_UART_Abort_IT(huart);
+			HAL_UART_Receive_IT(huart, (scontrol.rx_buffer), 13);
+			
+		}
+		else if (scontrol.state == SERVO_WAIT_READ_SPEED_TRANSMIT)
+		{
+			
+			scontrol.state = SERVO_WAIT_READ_SPEED_RECEIVE;
+			scontrol.sdir = SRX;
+			SelectDaisyDirection(&scontrol);
+			HAL_UART_Abort_IT(huart);
+			HAL_UART_Receive_IT(huart, (scontrol.rx_buffer), 13);
 			
 		}
 		else if (scontrol.state == SERVO_WAIT_WRITE_MODE_TRANSMIT)

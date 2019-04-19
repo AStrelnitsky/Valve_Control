@@ -69,7 +69,7 @@
 //////////////////////////////////////////////////////////
 
 /////////DEFINES FOR DIRECT SEVRO SUBPROTOCOL////////////////
-
+/*
 #define SERVO_PING_BYTE FUNCTION_CODE + 1
 #define SERVO_REG_ADDRESS_L SERVO_PING_BYTE + 1
 #define SERVO_REG_ADDRESS_H SERVO_PING_BYTE + 2
@@ -77,6 +77,21 @@
 #define SERVO_GOAL_ANGLE_1 SERVO_REG_ADDRESS_H + 2
 #define SERVO_GOAL_ANGLE_2 SERVO_REG_ADDRESS_H + 3
 #define SERVO_GOAL_ANGLE_3 SERVO_REG_ADDRESS_H + 4
+#define WHEEL_MODE 				0x1F
+#define JOINT_MODE 				0x2F
+#define PING_MODE 				0xAC
+#define FACTORY_RESET     0xFA
+*/
+
+#define SERVO_DIRECT_PARAM_BYTE FUNCTION_CODE + 1
+#define SERVO_DATA_0_L_DSM SERVO_DIRECT_PARAM_BYTE + 1
+#define SERVO_DATA_0_H_DSM SERVO_DATA_0_L_DSM + 1
+#define SERVO_DATA_1_L_DSM SERVO_DATA_0_H_DSM + 1
+#define SERVO_DATA_1_H_DSM SERVO_DATA_1_L_DSM + 1
+#define SERVO_DATA_2_L_DSM SERVO_DATA_1_H_DSM + 1
+#define SERVO_DATA_2_H_DSM SERVO_DATA_2_L_DSM + 1
+#define SERVO_DATA_3_L_DSM SERVO_DATA_2_H_DSM + 1
+#define SERVO_DATA_3_H_DSM SERVO_DATA_3_L_DSM + 1
 #define WHEEL_MODE 				0x1F
 #define JOINT_MODE 				0x2F
 #define PING_MODE 				0xAC
@@ -144,6 +159,20 @@ struct RS485
 	int16_t servos[NUMBER_OF_SERVOS];
 	uint8_t rx_buffer_length;
 };
+typedef enum
+{
+    NEW_ID = 0,
+    GET_ID,
+    NEW_MODE,
+    GET_MODE,
+    NEW_CURRENT_LIMIT,
+    GET_CURRENT_LIMIT,
+    NEW_ANGLE,
+    GET_ANGLE,
+    NEW_SPEED,
+    GET_SPEED,
+		FACTORy_RESET
+} DIRECT_SERVO_PARAMS;
 
 void RS485_Init(void);
 

@@ -61,7 +61,7 @@
 #include "XM5-01_03_00_000_REV_A.h"
 #include "semphr.h"
 #define MAIN_THREAD_DELAY 1000/SYS_FREQ // period of main programm thread, ms
-#define SERVO_THREAD_DELAY MAIN_THREAD_DELAY/NUMBER_OF_SERVOS // period of servo thread, ms
+#define SERVO_THREAD_DELAY MAIN_THREAD_DELAY/(4*NUMBER_OF_SERVOS) // period of servo thread, ms
 #define USER_LED_HALFPERIOD 100*MAIN_THREAD_DELAY // half period of blik LED cycle, ms
 
 /* USER CODE END Includes */
@@ -90,6 +90,7 @@ void StartRS485Task(void const * argument);
 void ServoTask(void const * argument);
 
  xSemaphoreHandle xBinarySemaphore;
+ xSemaphoreHandle xBinarySemaphore_SC;
 /* USER CODE END FunctionPrototypes */
 
 /* Hook prototypes */
@@ -108,6 +109,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
 	vSemaphoreCreateBinary(xBinarySemaphore);
+	vSemaphoreCreateBinary(xBinarySemaphore_SC);
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
@@ -147,8 +149,8 @@ void StartDefaultTask(void const * argument)
 		{
 			HAL_UART_Receive_IT(&huart3, rs485.rx_buffer, RS485_RX_SIZE);
 			rs485.state = WAIT_IT_RECEIVE;
-
 		}
+		//xSemaphoreGive( xBinarySemaphore_SC);
 		++cnt1;
 		if ( !(cnt1 % USER_LED_HALFPERIOD))
 		{
@@ -165,7 +167,10 @@ void  StartRS485Task (void const * argument)
 	for(;;)
 	{
 		xSemaphoreTake(xBinarySemaphore, portMAX_DELAY);
-		ParseIncoming(&rs485, &scontrol);
+		if ( rs485.state == WAIT_PARSE)
+		{
+			ParseIncoming(&rs485, &scontrol);
+		}
 	}
 }
 void ServoTask(void const * argument)
@@ -173,7 +178,7 @@ void ServoTask(void const * argument)
 	for(;;)
 	{
 			osDelay(SERVO_THREAD_DELAY);
-	
+	//xSemaphoreTake(xBinarySemaphore_SC, portMAX_DELAY);
 	//	if (scontrol.state == SERVO_IDLE) 
 	//	{
 				startServoControl();

@@ -358,7 +358,7 @@ void HAL_UART_RxCallback(UART_HandleTypeDef *huart)
 	switch (byte_counter)
 	{
 		case 0: 
-			if (buff == PUMP) ++byte_counter;
+			if (buff == STROB) ++byte_counter;
 			else  
 			{
 				byte_counter = 0;
@@ -399,7 +399,6 @@ void HAL_UART_RxCallback(UART_HandleTypeDef *huart)
 }
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	static uint8_t byte_counter;
 	if ((huart->Instance) == USART2)
 	{
 			HAL_TIM_Base_Stop_IT(&htim2);
@@ -407,24 +406,31 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		
 			if (scontrol.state == SERVO_WAIT_REG_WRITE_RECEIVE)
 				{
-					//scontrol.state = SERVO_READY_TO_ACTION;
+						//scontrol.state = SERVO_READY_TO_ACTION;
 						scontrol.servo_rx_timer = RX_CLEAR;
+					if(scontrol.s_counter < NUMBER_OF_SERVOS - 1)
+					{
+						scontrol.state = SERVO_IDLE;
+					}
+					else
+					{
 						scontrol.state = SERVO_WAIT_ACTION_TRANSMIT;
 						scontrol.sdir = STX;
 						SelectDaisyDirection(&scontrol);
 						constructControlMessage(&scontrol, ACTION);
 						HAL_UART_Transmit_IT(&huart2, (scontrol.tx_buffer), 10 + XL_ACTION_PARAMETR_SIZE);			
 						HAL_TIM_Base_Start_IT(&htim2);
+					}
 				
 				}
 			else if (scontrol.state == SERVO_WAIT_READ_RECEIVE)
 			{
 				scontrol.servos[scontrol.s_counter].mode = scontrol.rx_buffer[9];
-				scontrol.state = IDLE;
+				scontrol.state = SERVO_IDLE;
 			}
 			else
 				{
-					scontrol.state = IDLE;
+					scontrol.state = SERVO_IDLE;
 					
 				}
 	}
@@ -432,10 +438,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	{
 		rs485.state = WAIT_PARSE;
 		xSemaphoreGiveFromISR( xBinarySemaphore, &xHigherPriorityTaskWoken);
-		if (xHigherPriorityTaskWoken == pdTRUE)
-		{
-			//taskYIELD ();
-		}
 	}
 }
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
@@ -452,7 +454,6 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 			
 			htim2.Instance->ARR = SERVO_RX_TIMEOUT;
 			htim2.Instance->CNT = 0;
-			//htim2.Init.Period = SERVO_RX_TIMEOUT;
 			HAL_TIM_Base_Start_IT(&htim2);
 		}
 		else if ( scontrol.state == SERVO_WAIT_REG_WRITE_TRANSMIT)

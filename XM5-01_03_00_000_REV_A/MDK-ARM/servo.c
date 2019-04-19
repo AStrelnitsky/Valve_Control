@@ -10,7 +10,6 @@ void servoInit(struct SControl*);
 void constructControlMessage(struct SControl*, uint8_t param);
 void parseMessage(struct SControl*);
 uint8_t* addCRC( uint8_t*, uint8_t);
-unsigned short crc_check(unsigned char *data_blk_ptr, unsigned short data_blk_size);
 unsigned short update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr, unsigned short data_blk_size); //DXL's DEVELOPERS CODE
 void SelectDaisyDirection(struct SControl* sc);
 void simpleDelay( uint32_t delay);
@@ -20,51 +19,80 @@ void startServoControl(void)
 	scontrol.sdir = SRX;
 	SelectDaisyDirection(&scontrol);
 	
-	if (scontrol.s_counter < NUMBER_OF_SERVOS - 1 )
+	if (scontrol.s_counter < NUMBER_OF_SERVOS - 1)
 	//if (scontrol.number_of_servos < scontrol.number_of_servos - 1)
 	{
-		++(scontrol.s_counter);
+	
+			++(scontrol.s_counter);
 	}
 	else 
 	{
 		scontrol.s_counter = 0;
-		//scontrol.state = SERVO_WAIT_ACTION_TRANSMIT;
-	//	scontrol.sdir = STX;
-		//SelectDaisyDirection(&scontrol);
-	//	constructControlMessage(&scontrol, ACTION);
-		//HAL_UART_Transmit_IT(&huart2, (scontrol.tx_buffer), 10 + XL_ACTION_PARAMETR_SIZE);			
-		//HAL_TIM_Base_Start_IT(&htim2);
+		if (scontrol.send_counter < 1)
+		{
+			++(scontrol.send_counter);
+		}
+		else
+		{
+			scontrol.send_counter = 0;
+		}
+
 	}
+	//scontrol.s_counter = 0;
+	//scontrol.servo_rx_timer = RX_CLEAR;
 	
 	if ( scontrol.servos[scontrol.s_counter].ping == 1 )
 	{
 		scontrol.servos[scontrol.s_counter].ping = 0;
 		servoPing(&scontrol, (scontrol.s_counter));
 	}
-	if (scontrol.servos[scontrol.s_counter].mode != scontrol.servos[scontrol.s_counter].new_mode)
+	 if (scontrol.servos[scontrol.s_counter].mode != scontrol.servos[scontrol.s_counter].new_mode)
 	{
+		HAL_TIM_Base_Stop_IT(&htim2);
+		scontrol.servo_rx_timer = RX_CLEAR;
 		sendMessage(&scontrol, TOGGLE_MODE);
 		scontrol.servos[scontrol.s_counter].mode = scontrol.servos[scontrol.s_counter].new_mode;
 	}
-	if (scontrol.servos[scontrol.s_counter].ID != scontrol.servos[scontrol.s_counter].new_ID)
+	 if (scontrol.servos[scontrol.s_counter].ID != scontrol.servos[scontrol.s_counter].new_ID)
 	{
+		HAL_TIM_Base_Stop_IT(&htim2);
+		scontrol.servo_rx_timer = RX_CLEAR;
 		sendMessage(&scontrol, WRITE_ID);
 		scontrol.servos[scontrol.s_counter].ID = scontrol.servos[scontrol.s_counter].new_ID;
 	}
-	//if (scontrol.servo_control)
+	 if (scontrol.servos[scontrol.s_counter].freset == 1)
 	{
-		sendMessage(&scontrol, CONTROL);
-		scontrol.servo_control = 0;
-	}
-	if (scontrol.servos[scontrol.s_counter].freset)
-	{
+		HAL_TIM_Base_Stop_IT(&htim2);
+		scontrol.servo_rx_timer = RX_CLEAR;
 		sendMessage(&scontrol, FACT_RESET);
 		scontrol.servos[scontrol.s_counter].freset = 0;
 	}
+	 if (scontrol.servo_control == 1 )
+	{
+		if(scontrol.send_counter == 0)
+			{
+				if ((scontrol.servos[scontrol.s_counter].mode) == 2)
+				{
+					sendMessage(&scontrol, READ_POSITION);
+				}
+				else
+				{
+					sendMessage(&scontrol, READ_SPEED);
+				}
+				
+			}
+		else
+			{
+				sendMessage(&scontrol, CONTROL);
+				//scontrol.servo_control = 0;
+			}
+	}
+	
 }
 
 void servoInit(struct SControl* sc)
 {
+	sc->send_counter = 0;
 	sc->state = SERVO_IDLE;
 	sc->bus_state = EMPTY;
 	sc->sdir = STX;
@@ -99,7 +127,6 @@ void servoInit(struct SControl* sc)
 			
 	}
 	
-	//sc->servos = servos;
 	sc->servo_rx_timer = RX_CLEAR;
 	for (uint8_t i = 0; i < (sc->number_of_servos); ++i)
 	{
@@ -155,7 +182,7 @@ void sendMessage(struct SControl *sc, enum TYPE_OF_MESSAGE type)
 			SelectDaisyDirection(sc);
 			constructControlMessage(sc, WRITE);
 			HAL_UART_Transmit_IT(&huart2, (sc->tx_buffer), 10 + XL_WRITE_MODE_PARAMETR_SIZE);
-			htim2.Instance->ARR = SERVO_RX_TIMEOUT;
+			htim2.Instance->ARR = SERVO_RX_TIMEOUT << 5;
 			HAL_TIM_Base_Start_IT(&htim2);
 		}
 		while (!((sc->servo_rx_timer == RX_COMPLETE) || ((sc->servo_rx_timer == RX_OVERFLOW)))) {}
@@ -170,7 +197,7 @@ void sendMessage(struct SControl *sc, enum TYPE_OF_MESSAGE type)
 			SelectDaisyDirection(sc);
 			constructControlMessage(sc, F_RESET);
 			HAL_UART_Transmit_IT(&huart2, (sc->tx_buffer), 10 + XL_FACTORY_RESET_PARAMETR_SIZE);
-			htim2.Instance->ARR = SERVO_RX_TIMEOUT;
+			htim2.Instance->ARR = SERVO_RX_TIMEOUT << 5;
 			HAL_TIM_Base_Start_IT(&htim2);
 		}
 		
@@ -187,14 +214,49 @@ void sendMessage(struct SControl *sc, enum TYPE_OF_MESSAGE type)
 			SelectDaisyDirection(sc);
 			constructControlMessage(sc, ID_WRITE);
 			HAL_UART_Transmit_IT(&huart2, (sc->tx_buffer), 10 + XL_WRITE_ID_PARAMETR_SIZE);
-			htim2.Instance->ARR = SERVO_RX_TIMEOUT;
+			htim2.Instance->ARR = SERVO_RX_TIMEOUT << 5;
 			HAL_TIM_Base_Start_IT(&htim2);
 		}
 		
 		while (!((sc->servo_rx_timer == RX_COMPLETE) || ((sc->servo_rx_timer == RX_OVERFLOW)))) {}
 		sc->servo_rx_timer = RX_CLEAR;
 	}
+	else if (type == READ_POSITION)
+{
+	//if(sc->servo_rx_timer == RX_CLEAR)
+		//{
+			sc->state = SERVO_WAIT_READ_POSITION_TRANSMIT;
+			sc->sdir = STX;
+			SelectDaisyDirection(sc);
+			constructControlMessage(sc, POSITION_READ);
+			HAL_UART_Transmit_IT(&huart2, (sc->tx_buffer), 10 + XL_READ_MODE_PARAMETR_SIZE);
+			htim2.Instance->ARR = SERVO_RX_TIMEOUT;
+			HAL_TIM_Base_Start_IT(&htim2);
+		//}
+		
+	//	while (!((sc->servo_rx_timer == RX_COMPLETE) || ((sc->servo_rx_timer == RX_OVERFLOW)))) {}
+		//sc->servo_rx_timer = RX_CLEAR;
+
 }
+else if (type == READ_SPEED)
+{
+	//if(sc->servo_rx_timer == RX_CLEAR)
+		//{
+			sc->state = SERVO_WAIT_READ_SPEED_TRANSMIT;
+			sc->sdir = STX;
+			SelectDaisyDirection(sc);
+			constructControlMessage(sc, SPEED_READ);
+			HAL_UART_Transmit_IT(&huart2, (sc->tx_buffer), 10 + XL_READ_MODE_PARAMETR_SIZE);
+			htim2.Instance->ARR = SERVO_RX_TIMEOUT;
+			HAL_TIM_Base_Start_IT(&htim2);
+		//}
+		
+	//	while (!((sc->servo_rx_timer == RX_COMPLETE) || ((sc->servo_rx_timer == RX_OVERFLOW)))) {}
+		//sc->servo_rx_timer = RX_CLEAR;
+
+}
+}
+
 }
 void constructControlMessage(struct SControl* sc, uint8_t param)
 {
@@ -285,6 +347,48 @@ void constructControlMessage(struct SControl* sc, uint8_t param)
 		sc->tx_buffer[8 + XL_READ_MODE_PARAMETR_SIZE] = crc & 0xff;
 		sc->tx_buffer[9 + XL_READ_MODE_PARAMETR_SIZE] = (crc>>8) & 0xff;
 	}
+	else if (param == POSITION_READ)
+	{
+		uint16_t len = 3 + XL_READ_MODE_PARAMETR_SIZE;
+		sc->tx_buffer[HEADER1_BYTE]     = 	HEADER1;
+		sc->tx_buffer[HEADER2_BYTE]     = 	HEADER2;
+		sc->tx_buffer[HEADER3_BYTE]     = 	HEADER3;
+		sc->tx_buffer[RESERVED_BYTE]    = RESERVED;
+		sc->tx_buffer[ID_BYTE] 			    = (sc->servos[num].ID);
+		sc->tx_buffer[LEN_L_BYTE]       = (uint8_t) len;
+		sc->tx_buffer[LEN_H_BYTE]       = (uint8_t) (len >> 8);
+		sc->tx_buffer[INSTRUCTION_BYTE] = READ;
+		sc->tx_buffer[INSTRUCTION_BYTE + 1] = XL_CURRENT_POSITION_ADDRESS_L;
+		sc->tx_buffer[INSTRUCTION_BYTE + 2] = XL_CURRENT_POSITION_ADDRESS_H;
+		sc->tx_buffer[INSTRUCTION_BYTE + 3] = 0x02;
+		sc->tx_buffer[INSTRUCTION_BYTE + 4] = 0x00;
+		
+		crc = update_crc(0, (sc->tx_buffer), 8 + XL_READ_MODE_PARAMETR_SIZE );
+    
+		sc->tx_buffer[8 + XL_READ_MODE_PARAMETR_SIZE] = crc & 0xff;
+		sc->tx_buffer[9 + XL_READ_MODE_PARAMETR_SIZE] = (crc>>8) & 0xff;
+	}
+	else if (param == SPEED_READ)
+	{
+		uint16_t len = 3 + XL_READ_MODE_PARAMETR_SIZE;
+		sc->tx_buffer[HEADER1_BYTE]     = 	HEADER1;
+		sc->tx_buffer[HEADER2_BYTE]     = 	HEADER2;
+		sc->tx_buffer[HEADER3_BYTE]     = 	HEADER3;
+		sc->tx_buffer[RESERVED_BYTE]    = RESERVED;
+		sc->tx_buffer[ID_BYTE] 			    = (sc->servos[num].ID);
+		sc->tx_buffer[LEN_L_BYTE]       = (uint8_t) len;
+		sc->tx_buffer[LEN_H_BYTE]       = (uint8_t) (len >> 8);
+		sc->tx_buffer[INSTRUCTION_BYTE] = READ;
+		sc->tx_buffer[INSTRUCTION_BYTE + 1] = XL_CURRENT_SPEED_ADDRESS_L;
+		sc->tx_buffer[INSTRUCTION_BYTE + 2] = XL_CURRENT_SPEED_ADDRESS_H;
+		sc->tx_buffer[INSTRUCTION_BYTE + 3] = 0x02;
+		sc->tx_buffer[INSTRUCTION_BYTE + 4] = 0x00;
+		
+		crc = update_crc(0, (sc->tx_buffer), 8 + XL_READ_MODE_PARAMETR_SIZE );
+    
+		sc->tx_buffer[8 + XL_READ_MODE_PARAMETR_SIZE] = crc & 0xff;
+		sc->tx_buffer[9 + XL_READ_MODE_PARAMETR_SIZE] = (crc>>8) & 0xff;
+	}
 	else if (param == WRITE)
 	{
 		uint16_t len = 3 + XL_WRITE_MODE_PARAMETR_SIZE;
@@ -298,7 +402,8 @@ void constructControlMessage(struct SControl* sc, uint8_t param)
 		sc->tx_buffer[INSTRUCTION_BYTE] = param;
 		sc->tx_buffer[INSTRUCTION_BYTE + 1] = XL_CONTROL_MODE_ADDRESS_L;
 		sc->tx_buffer[INSTRUCTION_BYTE + 2] = XL_CONTROL_MODE_ADDRESS_H;
-		sc->tx_buffer[INSTRUCTION_BYTE + 3] = 0x02;
+		sc->tx_buffer[INSTRUCTION_BYTE + 3] = sc->servos[num].new_mode;//0x02;
+		sc->tx_buffer[INSTRUCTION_BYTE + 4] = 0;//sc->servos[num].new_mode;//0x02;
 		
 		
 		crc = update_crc(0, (sc->tx_buffer), 8 + XL_WRITE_MODE_PARAMETR_SIZE );
@@ -336,13 +441,15 @@ void constructControlMessage(struct SControl* sc, uint8_t param)
 		sc->tx_buffer[INSTRUCTION_BYTE] = WRITE;
 		sc->tx_buffer[INSTRUCTION_BYTE + 1] = XL_ID_ADDRESS_L;
 		sc->tx_buffer[INSTRUCTION_BYTE + 2] = XL_ID_ADDRESS_H;
-		sc->tx_buffer[INSTRUCTION_BYTE + 3] = sc->servos[(sc->s_counter)].new_ID;
+		sc->tx_buffer[INSTRUCTION_BYTE + 3] = sc->servos[num].new_ID;
+		sc->tx_buffer[INSTRUCTION_BYTE + 4] = 0;//sc->servos[num].new_ID;
 		
 		crc = update_crc(0, (sc->tx_buffer), 8 + XL_WRITE_ID_PARAMETR_SIZE );
     
 		sc->tx_buffer[8 + XL_WRITE_ID_PARAMETR_SIZE] = crc & 0xff;
 		sc->tx_buffer[9 + XL_WRITE_ID_PARAMETR_SIZE] = (crc>>8) & 0xff;
 	}
+	
 }
 
 void servoPing(struct SControl* sc, uint8_t ID)
@@ -437,7 +544,13 @@ unsigned short update_crc(unsigned short crc_accum, unsigned char *data_blk_ptr,
 }
 unsigned short crc_check(unsigned char *data_blk_ptr, unsigned short data_blk_size)
 {
-	return 1;
+	unsigned short crc_ac = 0;
+	update_crc (crc_ac, data_blk_ptr, data_blk_size);
+	if (crc_ac == (data_blk_ptr[11] + (data_blk_ptr[12] << 8)))
+	{
+		return 1;
+	}
+	else return 0;
 }
 void SelectDaisyDirection(struct SControl* sc)
 {

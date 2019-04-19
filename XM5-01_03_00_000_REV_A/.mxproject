@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Workbanch_NEW/XM5/SOFT/EMBEDDED/XM5-01_03_00_000_REV_A_test8/Inc
+HeaderPath=C:/Workbanch_NEW/XM5/SOFT/EMBEDDED/git/Valve_Control/XM5-01_03_00_000_REV_A/Inc
 HeaderFiles=gpio.h;adc.h;dac.h;dma.h;FreeRTOSConfig.h;i2c.h;usart.h;stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;tim.h;
-SourcePath=C:/Workbanch_NEW/XM5/SOFT/EMBEDDED/XM5-01_03_00_000_REV_A_test8/Src
+SourcePath=C:/Workbanch_NEW/XM5/SOFT/EMBEDDED/git/Valve_Control/XM5-01_03_00_000_REV_A/Src
 SourceFiles=gpio.c;adc.c;dac.c;dma.c;freertos.c;i2c.c;usart.c;stm32f4xx_it.c;stm32f4xx_hal_msp.c;stm32f4xx_hal_timebase_TIM.c;main.c;tim.c;
 
 [PreviousLibFiles]

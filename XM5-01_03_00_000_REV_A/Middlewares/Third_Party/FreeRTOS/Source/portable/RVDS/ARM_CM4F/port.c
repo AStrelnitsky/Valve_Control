@@ -480,7 +480,7 @@ __asm void xPortPendSVHandler( void )
 	str r0, [r2]
 
 	stmdb sp!, {r3}
-	mov r0, #4//#configMAX_SYSCALL_INTERRUPT_PRIORITY
+	mov r0, 4//#configMAX_SYSCALL_INTERRUPT_PRIORITY
 	msr basepri, r0
 	dsb
 	isb
